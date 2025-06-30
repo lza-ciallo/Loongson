@@ -41,3 +41,32 @@
 &emsp;&emsp;(3) 将`ROB`的`tag_ROB`条目的`valid`置为有效. <br>
 > __cc9__: 有效的`ROB`条目被依次发射, 在`ARF`的`rw`条目修改索引为`tag_PRF`. <br>
 > __cc?__: 若出现异常, 则清空其余所有信息, 保留`PRF`数据, 复制`ARF`索引到`RAT`. <br>
+
+# 6/30 #
+
+**PRF寄存器重命名**&**精确异常恢复**:
+
+- 本质为PRF寄存器资源的分配与释放
+
+- __分配__:
+
+> - 用`free_list`记录各寄存器是否可用, 根据优先级选择一个寄存器`P_new`, 将编号传给`RAT`并写入, 即可将`Rw`映射到`P_new`; <br>
+> - 此时`RAT`会弹出原先`Rw`对应的`P_old`, 将`P_old`, `P_new`存到`ROB`条目中; <br>
+> - 并在`free_list`中设置`P_new`为不可用. <br>
+
+- __释放__:
+
+> - `ROB`一条一条弹出条目, 若无异常, 则`P_new`写入`ARF`中, 并将`P_old`对应寄存器释放, 即在`free_list`中设置`P_old`可用; <br>
+> - 若出现异常, 则清空`ROB`, `P_old`回滚为`Rw`所映射的位置. <br>
+
+- 关键: `I1`, `I2`均要写入`R1`, 分别分配了`P1`, `P2`, 则`P1`必须在`I2`退休的时候才能释放
+
+- 否则: `I2`覆盖`I1`时将`P1`提前释放, `I2`后续指令可能被分配到`P1`, 造成`P1`数据污染, 但`I2`可能是异常后的指令, `P1`不应该释放
+
+- 结构实现:
+
+> __free_list__: (可内置于`PRF`或`RAT`,) 输出`P_new`, 输入来自`ROB`的`P_old`, <br>
+> 若指令有效发射则置`free_list[P_new]=0`, 若`ROB`退休则置`free_list[P_old]=1`. <br>
+> __ROB__: `指令发射有效位` + `RegWr有效位` + `Rw` + `P_new`(二者写入`ARF`) + `P_old`(新人确认真能接班了, 老人才能退休). <br>
+> __RS__: `Ra&Rb`查`RAT`查出的`tagRa&tagRb`, `validRa&validRb` + `ROB`分配的条目索引`tag_ROB`(后面写入这个条目) + `PRF`分配给`Rw`的`tag_PRF`(`P_new`) + `指令发射有效位`. <br>
+> __RAT__: 简单的`validRegs`和`tagRegs`. <br>
