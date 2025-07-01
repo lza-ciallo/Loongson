@@ -1,0 +1,3 @@
+cashe-src中实现了二路组相连的cashe，主要是状态机比较复杂，Icashe和Dcashe都有
+
+cashe-rubbish是一个并不能很好的完成功能的原型，时序到最后已经是答辩了，放在这里仅作娱乐
