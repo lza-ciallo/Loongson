@@ -76,3 +76,5 @@
 # 7/1 #
 
 *验证了原型机的内部控制不完备, 无法精确处理**RS, PRF, ROB满**的情况.*
+
+- 使用独立的`CTRL`单元, 生成前后端各自的`freeze_front`, `freeze_back`以及`valid_issue`信号.
