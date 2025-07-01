@@ -1,21 +1,21 @@
-CORE/
-│
-├── FRONT_END/
-│   ├── PC
-│   ├── INST_MEM
-│   ├── REG_IF_ID
-│   ├── DECODER
-│   ├── REG_ID_RENAME
-│   ├── RAT
-│   ├── RS_ADD
-│   └── RS_MUL
-│
-├── BACK_END/
-│   ├── PRF
-│   ├── REG_READ_EX
-│   ├── ADD_UNIT
-│   ├── MUL_UNIT
-│   ├── ROB
-│   └── ARF
-│
-└── CTRL/
+CORE/ <br>
+│ <br>
+├── FRONT_END/ <br>
+│   ├── PC <br>
+│   ├── INST_MEM <br>
+│   ├── REG_IF_ID <br>
+│   ├── DECODER <br>
+│   ├── REG_ID_RENAME <br>
+│   ├── RAT <br>
+│   ├── RS_ADD <br>
+│   └── RS_MUL <br>
+│ <br>
+├── BACK_END/ <br>
+│   ├── PRF <br>
+│   ├── REG_READ_EX <br>
+│   ├── ADD_UNIT <br>
+│   ├── MUL_UNIT <br>
+│   ├── ROB <br>
+│   └── ARF <br>
+│ <br>
+└── CTRL <br>
