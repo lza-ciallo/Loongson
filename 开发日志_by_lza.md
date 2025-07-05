@@ -134,5 +134,5 @@
             - 退休时将**FIFO**送一条写入**MEM**.
 
 - **FIFO**:
-    - 条目为`in_data|Addr`, 内部维护`ptr_old`,`ptr_young`, 以实现压缩式存储.
+    - 条目为`in_data|Addr`, 内部维护`ptr_old`,`ptr_young`(不是**LSQ**的), 以实现压缩式存储.
     - 配合**save**使用, **EX**阶段写入`FIFO[ptr_young]`, 退休时读出`FIFO[ptr_old]`.
