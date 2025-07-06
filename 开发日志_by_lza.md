@@ -85,7 +85,9 @@
 
 ## 7/2 ##
 
-*先定端口连接, 再写内部逻辑的**自顶向下**设计方法.*
+**先定端口连接, 再写内部逻辑的自顶向下设计方法:**
+
+*完成乱序多发射(3-2-3)原型机**ELEC_core_v2**布线.*
 
 ## 7/3 ##
 
@@ -96,6 +98,8 @@
     - 若并行3条指令, 查`sRAT`时要考虑**I1`R_dst`对I2/I3`R_src`的覆盖, I2`R_dst`对I3`R_src`的覆盖**, 代码实现上是引入**if嵌套**的分支旁路;
     - 若3条指令同时提交, 则异常出现的指令后的指令不能写入`aRAT`, 不能3端口简单的一一对接, 代码实现需要类似上面的**if嵌套**.
 
+## 7/4 ##
+
 ## 7/5 ##
 
 **内存读写(3-3-3)原型机*ELEC_core_v3*的初步设想:**
@@ -104,9 +108,9 @@
     - 访存指令译为`lw Rw, Ra(Imm)`(Rb=0), `sw Rb, Ra(Imm)`(不修改sRAT内的Rw-Pw映射).
 
 - **RS_AGU**:
-    - 正常的乱序发射队列, 编号为`tag_Addr`, 条目为`valid_op|Pa|valid_Ra|Imm`.
-    - 在**RENAME**阶段, 为三条指令提供三个空闲的`tag_Addr`位置, 依次判断: 若`Type=load/save`, 则写入`valid_op=1`,`Pa`,`valid_Ra`,`Imm`. 且`tag_Addr`同时送至**LSQ**.
-    - 根据设定的唤醒逻辑, 发射`valid_op=1`,`valid_Ra=1`的条目, 输出`valid_op`,`tag_Addr`,`Pa`,`Imm`.
+    - 正常的乱序发射队列, 编号为`tag_Addr`, 条目为`valid_op|Pa|valid_Pa|Imm`.
+    - 在**RENAME**阶段, 为三条指令提供三个空闲的`tag_Addr`位置, 依次判断: 若`Type=load/save`, 则写入`valid_op=1`,`Pa`,`valid_Pa`,`Imm`. 且`tag_Addr`同时送至**LSQ**.
+    - 根据设定的唤醒逻辑, 发射`valid_op=1`,`valid_Pa=1`的条目, 输出`valid_op`,`tag_Addr`,`Pa`,`Imm`.
     - 在**READ**阶段, 在**PRF**内读`Pa`得`busA`; 在**EX**阶段, 在**AGU**内计算`Addr=busA+SignExt(Imm)`.
     - 将执行结果的`valid_op`,`tag_Addr`,`Addr`仅广播给**LSQ**.
 
@@ -114,13 +118,13 @@
     - 半乱序发射队列, 在`ptr_young`顺序写入, 在`ptr_old`半乱序读出, 即:
         - `ptr_old`条目为**load**, 则允许乱序发射**此load到第一个save(不含)之间的所有load**;
         - `ptr_old`条目为**save**, 则只允许发射**此save**.
-    - 条目为`valid_op|mode|Px|valid_Rx|tag_Addr|Addr|valid_Addr`.
+    - 条目为`valid_op|mode|Px|valid_Px|tag_Addr|Addr|valid_Addr|tag_ROB`.
     - 在**RENAME**阶段:
-        - 若`Type=load`, 则写入`valid_op=1`,`mode=load`,`Px=Pw`,`valid_Rx=1`,`tag_Addr=tag_Addr_{RS_AGU提供}`,`valid_Addr=0`;
-        - 若`Type=save`, 则写入`valid_op=1`,`mode=save`,`Px=Pb`,`valid_Rx=valid_Rb`,`tag_Addr`,`valid_Addr=0`.
-    - 接收来自**FU**的广播, 对应`Px`置`valid_Rx=1`; 接收来自**AGU**的广播, 对应`tag_Addr`置`valid_Addr=1`,`Addr=Addr_{AGU计算结果}`.
-    - 准备好的标志为`valid_op=1`,`valid_Rx=1`,`valid_Addr=1`.
-    - 根据半乱序发射的唤醒逻辑, 发射`valid_op`,`mode`,`Px`,`Addr`.
+        - 若`Type=load`, 则写入`valid_op=1`,`mode=load`,`Px=Pw`,`valid_Px=1`,`tag_Addr=tag_Addr_{RS_AGU提供}`,`valid_Addr=0`,`tag_ROB`;
+        - 若`Type=save`, 则写入`valid_op=1`,`mode=save`,`Px=Pb`,`valid_Px=valid_Rb`,`tag_Addr`,`valid_Addr=0`,`tag_ROB`.
+    - 接收来自**FU**的广播, 对应`Px`置`valid_Px=1`; 接收来自**AGU**的广播, 对应`tag_Addr`置`valid_Addr=1`,`Addr=Addr_{AGU计算结果}`.
+    - 准备好的标志为`valid_op=1`,`valid_Px=1`,`valid_Addr=1`.
+    - 根据半乱序发射的唤醒逻辑, 发射`valid_op`,`mode`,`Px`,`Addr`,`tag_ROB`.
     - 执行阶段:
         - 若`mode=load`:
             - 在**READ**阶段不干活;
@@ -136,3 +140,17 @@
 - **FIFO**:
     - 条目为`in_data|Addr`, 内部维护`ptr_old`,`ptr_young`(不是**LSQ**的), 以实现压缩式存储.
     - 配合**save**使用, **EX**阶段写入`FIFO[ptr_young]`, 退休时读出`FIFO[ptr_old]`.
+
+# Week 2 #
+
+## 7/6 ##
+
+*完成访存(3-3-3)原型机**ELEC_core_v3**布线.*
+
+*预估:*
+- *v1: 乱序单发射*
+- *v2: 多发射, 仅ALU*
+- *v3: 访存, 无cache*
+- *v4: 访存, 带cache*
+- *v5: 跳转, 分支预测*
+- *v6: 特权指令 (应该是最后一版原型机)*
