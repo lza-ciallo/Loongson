@@ -39,33 +39,62 @@ module DATA_MEM (
 
     reg     [15 : 0]    fifo_data;
     reg                 find_in_fifo;
-    reg                 find_stop;
+    reg     [15 : 0]    fifo_match_list;    //  ptr_old->0 起始位置偏移
+    reg     [ 3 : 0]    match_entry;        //  加偏移的最近匹配条目
 
     wire    [ 2 : 0]    ready_ret_wire;
     wire    [ 2 : 0]    excep_ret_wire;
 
     wire    [ 3 : 0]    ptr_old_wire    [  2 : 0];
 
-    integer     i, j, k, count;
+    integer i, j, count;
 
     // full_FIFO 判定
     assign  full_FIFO   =   (valid_fifo == 16'hffff)? 1 : 0;
 
     // 在 FIFO 中尝试搜索对应条目
     always @(*) begin
-        fifo_data       =   0;
-        find_in_fifo    =   0;
-        find_stop       =   0;
-        for (j = 15; j >= 0; j = j - 1) begin
-            k = (j + ptr_old >= 16)? j + ptr_old - 16 : j + ptr_old;
-            if (find_stop == 0 && valid_fifo[k] == 1) begin
-                if (fifo[k].Addr == Addr) begin
-                    fifo_data       =   fifo[k].data;
-                    find_in_fifo    =   1;
-                    find_stop       =   1;
-                end
-            end
+        for (i = 0; i < 16; i = i + 1) begin
+            j   =   (i + ptr_old >= 16)? i + ptr_old - 16 : i + ptr_old;
+            fifo_match_list[i]  =   (valid_fifo[j] == 1 && fifo[j].Addr == Addr)? 1 : 0;
         end
+
+        casez (fifo_match_list)
+            16'b1???_????_????_????:    {match_entry, find_in_fifo}   =   {4'd15, 1'b1};
+            16'b01??_????_????_????:    {match_entry, find_in_fifo}   =   {4'd14, 1'b1};
+            16'b001?_????_????_????:    {match_entry, find_in_fifo}   =   {4'd13, 1'b1};
+            16'b0001_????_????_????:    {match_entry, find_in_fifo}   =   {4'd12, 1'b1};
+            16'b0000_1???_????_????:    {match_entry, find_in_fifo}   =   {4'd11, 1'b1};
+            16'b0000_01??_????_????:    {match_entry, find_in_fifo}   =   {4'd10, 1'b1};
+            16'b0000_001?_????_????:    {match_entry, find_in_fifo}   =   { 4'd9, 1'b1};
+            16'b0000_0001_????_????:    {match_entry, find_in_fifo}   =   { 4'd8, 1'b1};
+
+            16'b0000_0000_1???_????:    {match_entry, find_in_fifo}   =   { 4'd7, 1'b1};
+            16'b0000_0000_01??_????:    {match_entry, find_in_fifo}   =   { 4'd6, 1'b1};
+            16'b0000_0000_001?_????:    {match_entry, find_in_fifo}   =   { 4'd5, 1'b1};
+            16'b0000_0000_0001_????:    {match_entry, find_in_fifo}   =   { 4'd4, 1'b1};
+            16'b0000_0000_0000_1???:    {match_entry, find_in_fifo}   =   { 4'd3, 1'b1};
+            16'b0000_0000_0000_01??:    {match_entry, find_in_fifo}   =   { 4'd2, 1'b1};
+            16'b0000_0000_0000_001?:    {match_entry, find_in_fifo}   =   { 4'd1, 1'b1};
+            16'b0000_0000_0000_0001:    {match_entry, find_in_fifo}   =   { 4'd0, 1'b1};
+            default:                    {match_entry, find_in_fifo}   =   { 4'd0, 1'b0};
+        endcase
+
+        fifo_data   =   (match_entry + ptr_old >= 16)? fifo[match_entry + ptr_old - 16].data : fifo[match_entry + ptr_old].data;
+
+        // fifo_data       =   0;
+        // find_in_fifo    =   0;
+        // find_stop       =   0;
+        // for (j = 15; j >= 0; j = j - 1) begin
+        //     k = (j + ptr_old >= 16)? j + ptr_old - 16 : j + ptr_old;
+        //     if (find_stop == 0 && valid_fifo[k] == 1) begin
+        //         if (fifo[k].Addr == Addr) begin
+        //             fifo_data       =   fifo[k].data;
+        //             find_in_fifo    =   1;
+        //             find_stop       =   1;
+        //         end
+        //     end
+        // end
     end
 
     // 退休的 save 计数
