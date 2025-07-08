@@ -186,7 +186,7 @@
         - 则会查到`valid_entry=0`而默认不跳, 在**FIFO**中推进去一个`valid_fifo=1`但是空的条目, 同时向后传递`Predict=0`;
         - 后续分发进**RS_BRU**, 在**BRU**中算出`pc_branch`学习进**BTB**, 同时置`valid_entry=1`, 算出`Branch=0/1`写入**ROB**;
     - 若再次见面:
-        - 则查到`valid_entry=1`, 读取对应的`Predict=0/1`和`pc_branch`, 在**FIFO**中推进去一个`valid_fifo=1|pc_branch`;
+        - 则查到`valid_entry=1`, 读取对应的`Predict=0/1`和`pc_branch`, 在**FIFO**中推进去一个`valid_fifo=1|pc_unsel`;
         - 后续计算`Branch=0/1`即可.
     - **ROB**提交时, 应比对`Predict`是否等于`Branch`:
         - 不等则清空流水线, 削弱**PHT**, 将**FIFO**弹出一条`pc_unsel`更新为新地址;
