@@ -58,8 +58,10 @@ module LSQ (
     reg     [15 : 0]    Addr_awake_r;
     reg     [ 4 : 0]    tag_ROB_awake_r;
 
-    reg     [ 7 : 0]    token_list;     //  标记允许被乱序发射的条目
-    reg                 token_stop;     //  代替break
+    reg     [ 7 : 0]    token_list;     //  起始位置 ptr_old, 标记允许被乱序发射的条目
+    reg     [ 7 : 0]    shift_list;     //  ptr_old->0 的 mode_list & valid_op_list
+    reg     [ 7 : 0]    token_temp;     //  ptr_old->0
+    reg     [ 7 : 0]    shift_temp;     //  起始位置 ptr_old
 
     integer i, j, k;
     genvar  gvi;
@@ -208,24 +210,48 @@ module LSQ (
     assign  Addr_awake      =   Addr_awake_r;
     assign  tag_ROB_awake   =   tag_ROB_awake_r;
 
+
     always @(*) begin
-        token_list = 0;
-        token_stop = 0;
-        for (j = 0; j < 8; j = j + 1) begin
-            k = (j + ptr_old >= 8)? j + ptr_old - 8 : j + ptr_old;
-            if (token_stop == 0 && valid_op_list[k] == 1) begin
-                if (mode_list[k] == 0) begin
-                    if (k == ptr_old) begin
-                        token_list[k] = 1;
-                    end
-                    token_stop = 1;
-                end
-                else begin
-                    token_list[k] = 1;
-                end
-            end
+        shift_temp  =   mode_list & valid_op_list;
+        for (i = 0; i < 8; i = i + 1) begin
+            j   =   (i + ptr_old >= 8)? i + ptr_old - 8 : i + ptr_old;
+            shift_list[i]   =   shift_temp[j];
+            k   =   (i + 8 - ptr_old >= 8)? i - ptr_old : i + 8 - ptr_old;
+            token_list[i]   =   token_temp[k];
         end
+
+        casez (shift_list)
+            8'b????_???0:   token_temp  =   8'b0000_0001;
+            8'b????_??01:   token_temp  =   8'b0000_0001;
+            8'b????_?011:   token_temp  =   8'b0000_0011;
+            8'b????_0111:   token_temp  =   8'b0000_0111;
+            8'b???0_1111:   token_temp  =   8'b0000_1111;
+            8'b??01_1111:   token_temp  =   8'b0001_1111;
+            8'b?011_1111:   token_temp  =   8'b0011_1111;
+            8'b0111_1111:   token_temp  =   8'b0111_1111;
+            8'b1111_1111:   token_temp  =   8'b1111_1111;
+            default:        token_temp  =   8'b0000_0000;
+        endcase
     end
+
+    // always @(*) begin
+    //     token_list = 0;
+    //     token_stop = 0;
+    //     for (j = 0; j < 8; j = j + 1) begin
+    //         k = (j + ptr_old >= 8)? j + ptr_old - 8 : j + ptr_old;
+    //         if (token_stop == 0 && valid_op_list[k] == 1) begin
+    //             if (mode_list[k] == 0) begin
+    //                 if (k == ptr_old) begin
+    //                     token_list[k] = 1;
+    //                 end
+    //                 token_stop = 1;
+    //             end
+    //             else begin
+    //                 token_list[k] = 1;
+    //             end
+    //         end
+    //     end
+    // end
 
     always @(*) begin
         casez (valid_op_list & valid_Px_list & valid_Addr_list & token_list)
