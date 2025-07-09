@@ -173,22 +173,27 @@
 
 ---
 
-**分支跳转原型机*ELEC_core_v4*初步设计思路:**
+## 7/9 ##
 
-- __j/jal类型__: 在**ID**阶段就能得到`pc_jump`, 跳转并清空中间无效指令;
-    - **若要写入寄存器, 则译码器需要特殊生成一个立即数addi指令`Rw=$ra`,`Ra=$0`,`Imm=pc_old+4(?)`**.
-    - 意味着ALU队列现在开始起码要开个`Imm`位和`isImm`位了.
-- __jr类型__: **在前后端interface额外开一个查询路径, 从SRAT接到PRF**.
-    - 在**RENAME**阶段读取`P_jr`即`valid_P_jr`, 若`valid_P_jr=1`则能查到`pc_jump`, 将此后指令清空或置无效;
-    - 若`valid_P_jr=0`则需要等待`pc_jump`, **需要让并行取指在其前面的被发射然后置无效, 后面的被置无效, 疑似不是很好实现的样子**.
-- __beq类型__: 在前端某阶段(理想化假设**IF**)得到`pc_predict=pc_branch/pc_old+4(?)`, 不用清空可以直接更新. 并设置一个**FIFO**保存每次查到的`pc_predict`的**另一个选择**`pc_unsel`.
-    - 若初次见面还未学习地址:
-        - 则会查到`valid_entry=0`而默认不跳, 在**FIFO**中推进去一个`valid_fifo=1`但是空的条目, 同时向后传递`Predict=0`;
-        - 后续分发进**RS_BRU**, 在**BRU**中算出`pc_branch`学习进**BTB**, 同时置`valid_entry=1`, 算出`Branch=0/1`写入**ROB**;
-    - 若再次见面:
-        - 则查到`valid_entry=1`, 读取对应的`Predict=0/1`和`pc_branch`, 在**FIFO**中推进去一个`valid_fifo=1|pc_unsel`;
-        - 后续计算`Branch=0/1`即可.
-    - **ROB**提交时, 应比对`Predict`是否等于`Branch`:
-        - 不等则清空流水线, 削弱**PHT**, 将**FIFO**弹出一条`pc_unsel`更新为新地址;
-        - 相等则不清空, 强化**PHT**, 将**FIFO**弹出一条`pc_unsel`但不更新.
-    - ***v4*版本更新的最大难度来源.**
+**跳转原型机*ELEC_core_v4*设计:**
+
+- __BEQ__:
+   - `if GR[rj] == GR[rd]: PC = PC + SignExt({offs16, 2'b00})`
+   - **IF**阶段查询**BTB**,**PHT**得到`pc_predict` (更新pc), `pc_unsel`,`index`,`Predict` (三者存入**FIFO**);
+   - **ID**阶段解码得到`pc_branch`, 初次跳转则学习进**BTB**;
+   - **BRU**计算得到`Branch`;
+   - **ROB**退休比对`(Branch==Predict)?`, 相应强化或弱化`PHT[index]`, 预测失败时清空流水线并更新pc为`pc_unsel`.
+- __B__(=j):
+    - `PC = PC + SignExt({offs16, 2'b00})`
+    - **ID**阶段解码得到`pc_jump`, 游戏结束.
+- __BL__(=jal):
+    - `GR[1] = PC + 4, PC = PC + SignExt({offs16, 2'b00})`
+    - **ID**阶段得到`pc_jump`, 置`Rw=1,Ra=0,Rb=0`;
+    - **RENAME**阶段, 在**sRAT**中读写`Pw,Pw_old`并预写入**ROB**; 不分配进任何队列, 直接将`pc+4`送进结果广播(**需要慢一拍**), 后续同ALU指令.
+- __JIRL__:
+    - `GR[rd] = PC + 4, PC = GR[rj] + SignExt({offs16, 2'b00})`
+    - **RENAME**阶段开辟一个**等待席**, 用于存这个跳转指令, 接收广播, 发射;
+    - 将前面指令发射, 该指令查`P_list`,`valid_list`并送入**等待席**, 后面指令置无效, 并冻结前端;
+    - 送入**等待席**同时预写入**ROB**, 这样**等待席**最早下个周期发射, **自动满足结果广播比预写入慢一拍**;
+    - 若`GR[rj]`的valid值为1, 则发射: pc更新, `pc+4`送进结果广播, 后续同BL.
+    
