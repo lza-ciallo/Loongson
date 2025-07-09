@@ -179,8 +179,9 @@
 
 - __BEQ__:
    - `if GR[rj] == GR[rd]: PC = PC + SignExt({offs16, 2'b00})`
-   - **IF**阶段查询**BTB**,**PHT**得到`pc_predict` (更新pc), `pc_unsel`,`index`,`Predict` (三者存入**FIFO**);
-   - **ID**阶段解码得到`pc_branch`, 初次跳转则学习进**BTB**;
+   - **IF**阶段查询**BTB**,**PHT**得到`pc_predict` (更新pc), `pc_unsel`,`index`,`Predict`,`valid_Predict` (四者存入**FIFO**);
+   - 存入**FIFO**的使能信号为预解码得到的`isBranch`;
+   - **ID**阶段解码得到`pc_branch`, 初次跳转 (`valid_Predict=0`) 则学习进**BTB**;
    - **BRU**计算得到`Branch`;
    - **ROB**退休比对`(Branch==Predict)?`, 相应强化或弱化`PHT[index]`, 预测失败时清空流水线并更新pc为`pc_unsel`.
 - __B__(=j):
@@ -189,7 +190,7 @@
 - __BL__(=jal):
     - `GR[1] = PC + 4, PC = PC + SignExt({offs16, 2'b00})`
     - **ID**阶段得到`pc_jump`, 置`Rw=1,Ra=0,Rb=0`;
-    - **RENAME**阶段, 在**sRAT**中读写`Pw,Pw_old`并预写入**ROB**; 不分配进任何队列, 直接将`pc+4`送进结果广播(**需要慢一拍**), 后续同ALU指令.
+    - **RENAME**阶段, 在**sRAT**中读写`Pw,Pw_old`并预写入**ROB**; 不分配进任何队列, 直接将`pc+4`送进结果广播 (**需要慢一拍**), 后续同ALU指令.
 - __JIRL__:
     - `GR[rd] = PC + 4, PC = GR[rj] + SignExt({offs16, 2'b00})`
     - **RENAME**阶段开辟一个**等待席**, 用于存这个跳转指令, 接收广播, 发射;
@@ -197,3 +198,8 @@
     - 送入**等待席**同时预写入**ROB**, 这样**等待席**最早下个周期发射, **自动满足结果广播比预写入慢一拍**;
     - 若`GR[rj]`的valid值为1, 则发射: pc更新, `pc+4`送进结果广播, 后续同BL.
     
+***v4*版本规划:**
+
+- [ ] *v4.1*实现`B/BL`;
+- [ ] *v4.2*加入`BEQ`;
+- [ ] *v4.3*加入`JIRL`.
