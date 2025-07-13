@@ -28,11 +28,14 @@ module ARAT (
         end
         else begin
             if (RegWr_x && !exp_x) begin
+                //需要写寄存器且非异常指令
                 if (!((RegWr_y && !exp_y && Rw_commit_x == Rw_commit_y) || (RegWr_z && !exp_z && Rw_commit_x == Rw_commit_z))) begin
+                    //确保后续的y和z都不会再访问这个架构寄存器
                     ARAT_P_list[Rw_commit_x] <= Pw_commit_x;
                 end
                 if (RegWr_y && !exp_y) begin
                     if (!(RegWr_z && !exp_z && Rw_commit_y == Rw_commit_z)) begin
+                        //确保后续z都不会再访问这个架构寄存器
                         ARAT_P_list[Rw_commit_y] <= Pw_commit_y;
                     end
                     if (RegWr_z && !exp_z) begin

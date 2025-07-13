@@ -40,8 +40,8 @@ module LSQ (
 
     reg     [ 7 : 0]    valid_op_list;
     reg     [ 7 : 0]    mode_list;
-    reg     [ 7 : 0]    valid_Px_list;
-    reg     [ 7 : 0]    valid_Addr_list;
+    reg     [ 7 : 0]    valid_Px_list;//表示指令i所需的数据是否就绪
+    reg     [ 7 : 0]    valid_Addr_list;//表示指令的内存地址是否已经由AGU计算完毕
 
     lsq_list            list            [7 : 0];
 
@@ -154,6 +154,7 @@ module LSQ (
                 if (valid_Result_add) begin
                     for (i = 0; i < 8; i = i + 1) begin
                         if (list[i].Px == Pw_Result_add && valid_op_list[i] == 1) begin
+                            //监听结果总线，如果广播的结果与某个Store指令等待的源操作数list[i].Px匹配，就将valid_Px_list[i]置为1
                             valid_Px_list[i]    <=  1;
                         end
                     end
@@ -176,6 +177,7 @@ module LSQ (
                 if (valid_Addr_agu) begin
                     for (i = 0; i < 8; i = i + 1) begin
                         if (list[i].tag_ROB == tag_ROB_Result_agu && valid_op_list[i] == 1) begin
+                            //监听AGU，如果广播的地址tag_ROB_Result_agu与队列中某个指令的tag_ROB匹配，就将valid_Addr_list[i]置为1
                             valid_Addr_list[i]  <=  1;
                             list[i].Addr        <=  Addr_agu;
                         end
@@ -214,12 +216,14 @@ module LSQ (
     always @(*) begin
         shift_temp  =   mode_list & valid_op_list;
         for (i = 0; i < 8; i = i + 1) begin
+            //使得队列头 ptr_old 对齐到 shift_list 的第0位
             j   =   (i + ptr_old >= 8)? i + ptr_old - 8 : i + ptr_old;
             shift_list[i]   =   shift_temp[j];
             k   =   (i + 8 - ptr_old >= 8)? i - ptr_old : i + 8 - ptr_old;
             token_list[i]   =   token_temp[k];
         end
 
+        //一个 Load 只有在它前面没有未确定地址的 Store 时才能被发射；一个 Store 只有当它是队列中最老的指令时才能被发射
         casez (shift_list)
             8'b????_???0:   token_temp  =   8'b0000_0001;
             8'b????_??01:   token_temp  =   8'b0000_0001;
@@ -254,7 +258,7 @@ module LSQ (
     // end
 
     always @(*) begin
-        casez (valid_op_list & valid_Px_list & valid_Addr_list & token_list)
+        casez (valid_op_list & valid_Px_list & valid_Addr_list & token_list)//指令有效+数据已就绪+地址已就绪+已获得发射令牌
             8'b????_???1:   {ptr_awake, awake_exist}    =   {3'd0, 1'b1};
             8'b????_??10:   {ptr_awake, awake_exist}    =   {3'd1, 1'b1};
             8'b????_?100:   {ptr_awake, awake_exist}    =   {3'd2, 1'b1};

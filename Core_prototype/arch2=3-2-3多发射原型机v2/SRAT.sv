@@ -66,23 +66,25 @@ module SRAT (
 
     reg     [7 : 0]     valid_list;
     reg     [31 : 0]    free_list;
-    reg     [4 : 0]     P_list [7 : 0];
+    reg     [4 : 0]     P_list [7 : 0];//核心的映射表，存储了架构寄存器 i 当前被映射到的物理寄存器号
 
     wire    [31 : 0]    free_list_y;
     wire    [31 : 0]    free_list_z;
 
+
+    //x可以直接指定
     assign  Pa_x = P_list[Ra_x];
     assign  Pb_x = P_list[Rb_x];
     assign  Pw_old_x = P_list[Rw_x];
     assign  valid_Ra_x = valid_list[Ra_x];
     assign  valid_Rb_x = valid_list[Rb_x];
-
-    assign  Pa_y = (Ra_y == Rw_x)? Pw_x : P_list[Ra_y];
+    //需要考虑x的依赖
+    assign  Pa_y = (Ra_y == Rw_x)? Pw_x : P_list[Ra_y];//判断指令 y 是否读取指令 x 刚刚写入的寄存器
     assign  Pb_y = (Rb_y == Rw_x)? Pw_x : P_list[Rb_y];
     assign  Pw_old_y = (Rw_y == Rw_x)? Pw_x : P_list[Rw_y];
     assign  valid_Ra_y = (Ra_y == Rw_x)? 0 : valid_list[Ra_y];
     assign  valid_Rb_y = (Rb_y == Rw_x)? 0 : valid_list[Rb_y];
-
+    //需要考虑对x和y的依赖
     assign  Pa_z = (Ra_z == Rw_y)? Pw_y : (Ra_z == Rw_x)? Pw_x : P_list[Ra_z];
     assign  Pb_z = (Rb_z == Rw_y)? Pw_y : (Rb_z == Rw_x)? Pw_x : P_list[Rb_z];
     assign  Pw_old_z = (Rw_z == Rw_y)? Pw_y : (Rw_z == Rw_x)? Pw_x : P_list[Rw_z];
@@ -159,10 +161,11 @@ module SRAT (
             end
             // 精确异常恢复
             else begin
-                P_list <= ARAT_P_list;
+                P_list <= ARAT_P_list;//用ARAT中保存的精确状态，覆盖掉SRAT的推测状态
                 valid_list <= 8'hff;
                 free_list <= 32'hffff_ffff;
                 for (i = 0; i < 8; i = i + 1) begin
+                    //重建free_list
                     free_list[ARAT_P_list[i]] <= 0;
                 end
             end
@@ -171,7 +174,8 @@ module SRAT (
 
     assign  free_list_y = free_list & ~(32'd1 << Pw_x);
     assign  free_list_z = free_list_y & ~(32'd1 << Pw_y);
-
+    
+    //分别从位图中寻找空闲的寄存器
     always @(*) begin
        casez (free_list)
             32'b????_????_????_????_????_????_????_???1:    Pw_x_r = 0;

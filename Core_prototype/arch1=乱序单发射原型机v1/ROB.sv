@@ -68,7 +68,7 @@ module ROB (
                 RegWr_list[tag_ROB_mul] <= 1;
                 tag_PRF_list[tag_ROB_mul] <= tag_PRF_mul;
             end
-
+            //核心:这个槽位有一条有效指令，并且这条指令已经被标记为完成
             if (valid_list[ptr_old] == 1 && RegWr_list[ptr_old] == 1) begin
                 if (Rw_list[ptr_old] == 0) begin
                     stop <= 1;

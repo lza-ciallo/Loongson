@@ -56,9 +56,11 @@ module DATA_MEM (
     always @(*) begin
         for (i = 0; i < 16; i = i + 1) begin
             j   =   (i + ptr_old >= 16)? i + ptr_old - 16 : i + ptr_old;
+            //检查是否有条目的地址fifo[j].Addr与当前Load指令的地址Addr相匹配
             fifo_match_list[i]  =   (valid_fifo[j] == 1 && fifo[j].Addr == Addr)? 1 : 0;
         end
 
+        //获取最新的、程序顺序上最接近的Store数据
         casez (fifo_match_list)
             16'b1???_????_????_????:    {match_entry, find_in_fifo}   =   {4'd15, 1'b1};
             16'b01??_????_????_????:    {match_entry, find_in_fifo}   =   {4'd14, 1'b1};
@@ -104,7 +106,7 @@ module DATA_MEM (
 
     assign  ready_ret_wire  =   {ready_ret[2], ready_ret[1], ready_ret[0]};
     assign  excep_ret_wire  =   {excep_ret[2], excep_ret[1], excep_ret[0]};
-
+    //筛选store类型
     always @(*) begin
         casez (ready_ret_wire & ~excep_ret_wire)
             3'b?01: count = (Type_ret[0] == 2'b11)? 1 : 0;
@@ -170,11 +172,12 @@ module DATA_MEM (
                     valid_Result_ls     <=  valid_ls;
                     mode_ls             <=  mode;
                     tag_ROB_Result_ls   <=  tag_ROB_ls;
-                    Result_ls           <=  find_in_fifo? fifo_data : mem_data[Addr];
+                    Result_ls           <=  find_in_fifo? fifo_data : mem_data[Addr];//Store-to-Load Forwarding
                     Pw_Result_ls        <=  Px;
 
                     // save 写入 FIFO
                     if (valid_ls && mode == 0) begin
+                        //将其数据和地址存入fifo的尾部，并移动尾指针
                         fifo[ptr_young]         <=  {busX, Addr};
                         valid_fifo[ptr_young]   <=  1;
                         ptr_young               <=  ptr_young + 1;
@@ -183,6 +186,8 @@ module DATA_MEM (
 
                 // ROB 退休从 FIFO 写入 MEM
                 case (count)
+                //根据之前计算出的count值，它从fifo的头部(取出1、2或3个最老的Store条目
+                //将它们的数据写入mem_data，然后将这些条目从fifo中清空，并向前移动头指针ptr_old
                     1:  begin
                         mem_data[fifo[ptr_old_wire[0]].Addr]    <=  fifo[ptr_old_wire[0]].data;
                         fifo[ptr_old_wire[0]]                   <=  '0;

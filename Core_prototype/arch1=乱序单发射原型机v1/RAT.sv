@@ -49,10 +49,14 @@ module RAT (
                 tag_reg[Rw] <= tag_PRF;
             end
 
+
+            //监听CDB
             if (valid_Result_add) begin
                 for (i = 0; i < 8; i = i + 1) begin
                     if (i != Rw || freeze_front || !valid_issue) begin
+                        //重命名操作的优先级更高，如果 i == Rw 并且正在进行有效的重命名，那么即使CDB广播了 Rw 的旧标签，valid_reg[Rw]也应该保持为0，等待新指令的计算结果。
                         if (tag_reg[i] == tag_PRF_add && !valid_reg[i]) begin
+                        //RAT中的某个条目 i 的标签与广播的标签匹配，并且该条目当前是无效状态（意味着它正在等待这个结果）
                             valid_reg[i] <= 1;
                         end
                     end

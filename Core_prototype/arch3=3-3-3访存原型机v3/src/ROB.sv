@@ -65,7 +65,7 @@ module ROB (
 
     // 提交退休指令
     assign  ready_ret[0]    =   list[ptr_old_wire[0]].ready;
-    assign  ready_ret[1]    =   ready_ret[0]? list[ptr_old_wire[1]].ready : 0;
+    assign  ready_ret[1]    =   ready_ret[0]? list[ptr_old_wire[1]].ready : 0;//取决于它自己是否 ready 并且前一条指令也正在退休
     assign  ready_ret[2]    =   (ready_ret[0] & ready_ret[1])? list[ptr_old_wire[2]].ready : 0;
 
     generate

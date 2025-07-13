@@ -79,6 +79,7 @@ module RS (
                 valid_opcode_reg[empty_rs] <= valid_opcode;
                 tag_PRF_reg[empty_rs] <= tag_PRF;
                 tag_ROB_reg[empty_rs] <= tag_ROB;
+                //在将指令写入保留站的同一周期，如果正好有执行单元（加法器或乘法器）广播了这条指令所等待的结果，那么就不需要等待了，可以直接将操作数标记为就绪
                 valid_Ra_reg[empty_rs] <= (valid_Ra == 0)? ((tag_Ra == tag_PRF_add && valid_Result_add)? 1 : ((tag_Ra == tag_PRF_mul && valid_Result_mul)? 1 : valid_Ra)): valid_Ra;
                 tag_Ra_reg[empty_rs] <= (valid_Ra == 0)? ((tag_Ra == tag_PRF_add && valid_Result_add)? tag_PRF_add : ((tag_Ra == tag_PRF_mul && valid_Result_mul)? tag_PRF_mul : tag_Ra)): tag_Ra;
                 valid_Rb_reg[empty_rs] <= (valid_Rb == 0)? ((tag_Rb == tag_PRF_add && valid_Result_add)? 1 : ((tag_Rb == tag_PRF_mul && valid_Result_mul)? 1 : valid_Rb)): valid_Rb;
@@ -91,6 +92,7 @@ module RS (
                 tag_ROB_awake <= tag_ROB_reg[awake_rs];
                 tag_Ra_awake <= tag_Ra_reg[awake_rs];
                 tag_Rb_awake <= tag_Rb_reg[awake_rs];
+                //清空awake_rs所指向的槽位的所有寄存器,从保留站中移除了这条指令，使该槽位可以被后续的新指令使用
                 valid_opcode_reg[awake_rs] <= 0;
                 tag_PRF_reg[awake_rs] <= '0;
                 tag_ROB_reg[awake_rs] <= '0;
@@ -106,7 +108,7 @@ module RS (
                 tag_Ra_awake <= '0;
                 tag_Rb_awake <= '0;
             end
-
+            //唤醒逻辑：该槽位是否有效+该槽位是否正在等待某个操作数+等待的操作数标签是否与当前广播的结果标签匹配
             if (valid_Result_add) begin
                 for (i = 0; i < 4; i = i + 1) begin
                     if (tag_Ra_reg[i] == tag_PRF_add && valid_Ra_reg[i] == 0 && valid_opcode_reg[i] == 1) begin

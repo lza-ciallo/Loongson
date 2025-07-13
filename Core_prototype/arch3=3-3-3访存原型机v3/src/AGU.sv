@@ -38,7 +38,7 @@ module AGU (
             else begin
                 valid_Addr_agu      <=  valid_agu;
                 tag_ROB_Result_agu  <=  tag_ROB_agu;
-                Addr_agu            <=  busA_agu + ExtImm;
+                Addr_agu            <=  busA_agu + ExtImm;//基址+偏移量
             end
         end
     end

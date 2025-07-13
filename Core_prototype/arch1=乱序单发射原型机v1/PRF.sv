@@ -53,11 +53,13 @@ module PRF (
             if (!freeze_back && valid_Result_mul && tag_PRF_mul != 0) begin
                 data[tag_PRF_mul] <= Result_mul;
             end
+            //当指令被提交，所覆盖的旧的物理寄存器就可以被安全地释放了
             if (RegWr_ARF && tag_PRF_ARF != 0) begin
                 free_list[tag_Rw_old] <= 1;
             end
         end
         else begin
+            //恢复逻辑，所有正在被体系结构寄存器使用的物理寄存器重新标记为占用
             free_list <= 32'hffff_ffff;
             for (i = 0; i < 8; i = i + 1) begin
                 free_list[ARF_tag[i]] <= 0;
