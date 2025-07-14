@@ -1,103 +1,64 @@
 # core_r1 #
 
-## 7/13 ##
+## 7/14 ##
 
-*整理了基础指令集, 后续据此实现**core_r1**版本.*
+### 部分关键时序模块的行为描述 ###
 
-### 基础指令 (57-8=49) ###
+- PC:
+    - 输出 pc;
+    - **Commit** 发现分支预测失败, 回退为 pc_unsel;
+    - **ID** 发现跳转指令, 改为 pc_jump;
+    - **IF&Predict** 发现分支指令, 改为 pc_predict.
 
-- ALU (20):
+- Branch_Predictor:
+    - 输入 pc, 输出 pc_predict;
+    - **ID** 初次发现跳转指令, 将 BTB 的 pc_decode 地址处写入 pc_branch;
+    - **Commit** 调整 PHT, 并弹出 pc_unsel.
 
-    | add | sub | slt | sltu | and | or | nor | xor | sll | srl | sra |
-    | - | - | - | - | - | - | - | - | - | - | - |
-    |addi | - | slti | sltui | andi | ori | - | xori | slli | srli | srai |
+- sRAT:
+    - 输入 Ra, Rb, Rw, 分配 Pw, 读取 Pa, Pb, Pw_old, valid_Pa, valid_Pb;
+    - 对于写寄存器指令, 修改 P_list, valid_list, free_list;
+    - 接收 **EX** 结果广播, 释放 valid_list;
+    - **Commit** 释放 free_list;
+    - 精确异常恢复, 写入aRAT_P_list, aRAT_free_list.
 
-- M/D (7):
+- Issue_Queues:
+    - 在分配条目内, 写入对应指令的 tag_ROB, P, valid 和其他必要信息;
+    - 读取 ROB 的 ptr_old, 采用 oldest-first 唤醒方式;
+    - 接收 **EX** 结果广播 (LSQ 还接收 AGU 特殊广播), 修改 valid.
 
-    | mul | mulh | div | mod |
-    | - | - | - | - |
-    | - | mulhu | divu | modu |
+- ROB:
+    - **Rename&Dispatch** 阶段分配 tag_ROB, 在此预写入 Rw, Pw, 和是否写寄存器等配置信息;
+    - 接收 **EX** 结果广播, 修改 ready;
+    - **Commit** 提交指令到 aRAT 和 sRAT, 更新 ptr_old.
 
-- AGU, L/S (8):
+### 尝试实现极简版LA32子集 (14) ###
 
-    | ldb | ldh | ldw | ldbu | ldhu |
-    | - | - | - | - | - |
-    | stb | sth | stw | - | - |
+- ALU (4):
+    | add rd, rj, rk | rd = rj + rk | `17'h00020` + rk + rj + rd |
+    | - | - | - |
+    | slt rd, rj, rk | rd = (signed(rj) < signed(rk))? 1 : 0 | `17'h00024` + rk + rj + rd |
+    | addi rd, rj, imm12 | rd = rj + SignExt(imm12) | `10'h00a` + imm12 + rj + rd |
+    | slti rd, rj, imm12 | rd = (signed(rj) < signed(SignExt(imm12)))? 1 : 0 | `10'h008` + imm12 + rj + rd |
 
-- BRU (6):
+- MDU (3):
+    | mul rd, rj, rk | rd = rj * rk [31:0] | `17'h00038` + rk + rj + rd |
+    | - | - | - |
+    | mulh rd, rj, rk | rd = signed(rj) * signed(rk) [63:32] | `17'h00039` + rk + rj + rd |
+    | mulhu rd, rj, rk | rd = unsigned(rj) * unsigned(rk) [63:32] | `17'h0003a` + rk + rj + rd |
 
-    | beq | bne | blt | bge |
-    | - | - | - | - |
-    | - | - | bltu | bgeu |
+- LSU (3):
+    | ldw rd, rj, imm12 | rd = mem[rj + SignExt(Imm12)] | `10'h0a2` + imm12 + rj + rd |
+    | - | - | - |
+    | stw rd, rj, imm12 | mem[rj + SignExt(Imm12)] = rd | `10'h0a6` + imm12 + rj + rd |
+    | dbar hint15=0 | - | `17'h070e4` + hint15 |
 
-- 直通 (4):
+- BRU (1):
+    | beq rj, rd, offs16 | if rj == rd: PC = PC + SignExt({offs16, 2'0}) |`6'h16` + offs16 + rj + rd |
+    | - | - | - |
 
-    | lu12i | bl |
-    | - | - |
-    | pcaddu12i | jirl |
-
-- JIRL (-)
-
-- 特殊处理 (4):
-    
-    nop `发射addi r0,r0,r0`, B `发射nop`, dbar `仅发至L/S`, ibar `ROB预写入即完成`
-
-| # | 指令 | 伪代码 | 发射队列 |
-| - | - | - | - |
-| 1 | add.w rd, rj, rk | GR[rd] = GR[rj] + GR[rk] | ALU |
-| 2 | sub.w rd, rj, rk | GR[rd] = GR[rj] - GR[rk] | ALU |
-| 3 | addi.w rd, rj, si12 | GR[rd] = GR[rj] + SignExt(si12) | ALU |
-| 4 | lu12i.w rd, si20 | GR[rd] = {si20, 12'b0} | 直通 |
-| 5 | slt rd, rj, rk | GR[rd] = (signed(GR[rj]) < signed(GR[rk]))? 1 : 0 | ALU |
-| 6 | sltu rd, rj, rk | GR[rd] = (unsigned(GR[rj]) < unsigned(GR[rk]))? 1 : 0 | ALU |
-| 7 | slti rd, rj, si12 | GR[rd] = (signed(GR[rj]) < signed(SignExt(si12)))? 1 : 0 | ALU |
-| 8 | sltui rd, rj, si12 | GR[rd] = (unsigned(GR[rj]) < unsigned(SignExt(si12)))? 1 : 0 | ALU |
-| 9 | pcaddu12i rd, si20 | GR[rd] = PC + {si20, 12'b0} | 直通 |
-| 10 | and rd, rj, rk | GR[rd] = GR[rj] & GR[rk] | ALU |
-| 11 | or rd, rj, rk | GR[rd] = GR[rj] \| GR[rk] | ALU |
-| 12 | nor rd, rj, rk | GR[rd] = ~(GR[rj] \| GR[rk]) | ALU |
-| 13 | xor rd, rj, rk | GR[rd] = GR[rj] ^ GR[rk] | ALU |
-| 14 | andi rd, rj, ui12 | GR[rd] = GR[rj] & ZeroExt(ui12) | ALU |
-| 15 | ori rd, rj, ui12 | GR[rd] = GR[rj] \| ZeroExt(ui12) | ALU |
-| 16 | xori rd, rj, ui12 | GR[rd] = GR[rj] ^ ZeroExt(ui12) | ALU |
-| 17 | nop | -  | ALU |
-| 18 | mul.w rd, rj, rk | GR[rd] = signed(GR[rj]) * signed(GR[rk])[31:0] | M/D |
-| 19 | mulh.w rd, rj, rk | GR[rd] = signed(GR[rj]) * signed(GR[rk])[63:32] | M/D |
-| 20 | mulh.wu rd, rj, rk | GR[rd] = unsigned(GR[rj]) * unsigned(GR[rk])[63:32] | M/D |
-| 21 | div.w rd, rj, rk | GR[rd] = signed(GR[rj]) / signed(GR[rk])[31:0] | M/D |
-| 22 | div.wu rd, rj, rk | GR[rd] = unsigned(GR[rj]) / unsigned(GR[rk])[31:0] | M/D |
-| 23 | mod.w rd, rj, rk | GR[rd] = signed(GR[rj]) % signed(GR[rk])[31:0] | M/D |
-| 24 | mod.wu rd, rj, rk | GR[rd] = unsigned(GR[rj]) % unsigned(GR[rk])[31:0] | M/D |
-| 25 | sll.w rd, rj, rk | GR[rd] = GR[rj] << GR[rk][4:0] | ALU |
-| 26 | srl.w rd, rj, rk | GR[rd] = GR[rj] >> GR[rk][4:0] | ALU |
-| 27 | sra.w rd, rj, rk | GR[rd] = GR[rj] >>> GR[rk][4:0] | ALU |
-| 28 | slli.w rd, rj, ui5 | GR[rd] = GR[rj] << ui5 | ALU |
-| 29 | srli.w rd, rj, ui5 | GR[rd] = GR[rj] >> ui5 | ALU |
-| 30 | srai.w rd, rj, ui5 | GR[rd] = GR[rj] >>> ui5 | ALU |
-| 31 | beq rj, rd, offs16 | if GR[rj] == GR[rd]: PC = PC + SignExt({offs16, 2'b0}) | BRU |
-| 32 | bne rj, rd, offs16 | if GR[rj] != GR[rd]: PC = PC + SignExt({offs16, 2'b0}) | BRU |
-| 33 | blt rj, rd, offs16 | if signed(GR[rj]) < signed(GR[rd]): PC = PC + SignExt({offs16, 2'b0}) | BRU |
-| 34 | bge rj, rd, offs16 | if signed(GR[rj]) >= signed(GR[rd]): PC = PC + SignExt({offs16, 2'b0}) | BRU |
-| 35 | bltu rj, rd, offs16 | if unsigned(GR[rj]) < unsigned(GR[rd]): PC = PC + SignExt({offs16, 2'b0}) | BRU |
-| 36 | bgeu rj, rd, offs16 | if unsigned(GR[rj]) >= unsigned(GR[rd]): PC = PC + SignExt({offs16, 2'b0}) | BRU |
-| 37 | b offs26 | PC = PC + SignExt({offs26, 2'b0}) | ALU (向后传nop) |
-| 38 | bl offs26 | GR[1] = PC + 4, PC = PC + SignExt({offs26, 2'b0}) | 直通 |
-| 39 | jirl rd, rj, offs16 | GR[rd] = PC + 4, PC = GR[rj] + SignExt({offs16, 2'b0}) | 直通; JIRL |
-| 40 | ld.b rd, rj, si12 | addr = GR[rj] + SignExt(si12), GR[rd] = SignExt(MEM(addr, BYTE)) | AGU; L/S |
-| 41 | ld.h rd, rj, si12 | addr = GR[rj] + SignExt(si12), GR[rd] = SignExt(MEM(addr, HALFWORD)) | AGU; L/S |
-| 42 | ld.w rd, rj, si12 | addr = GR[rj] + SignExt(si12), GR[rd] = MEM(addr, WORD) | AGU; L/S |
-| 43 | ld.bu rd, rj, si12 | addr = GR[rj] + SignExt(si12), GR[rd] = ZeroExt(MEM(addr, BYTE)) | AGU; L/S |
-| 44 | ld.hu rd, rj, si12 | addr = GR[rj] + SignExt(si12), GR[rd] = ZeroExt(MEM(addr, HALFWORD)) | AGU; L/S |
-| 45 | st.b rd, rj, si12 | addr = GR[rj] + SignExt(si12), MEM(addr, BYTE) = GR[rd][7:0] | AGU; L/S |
-| 46 | st.h rd, rj, si12 | addr = GR[rj] + SignExt(si12), MEM(addr, HALFWORD) = GR[rd][7:0] | AGU; L/S |
-| 47 | st.w rd, rj, si12 | addr = GR[rj] + SignExt(si12), MEM(addr, WORD) = GR[rd][7:0] | AGU; L/S |
-| 48 | preld hint rj, si12 | addr = GR[rj] + SignExt(si12), - | (x) |
-| 49 | ll.w rd, rj, si14 | ? | ?(x) |
-| 50 | sc.w rd, rj, si14 | ? | ?(x) |
-| 51 | dbar hint=0 | 限制 LSQ 半乱序发射 | L/S |
-| 52 | ibar hint=0 | IBAR 提交前一直 stall | 不占位 |
-| 53 | syscall code | - | (x) |
-| 54 | break code | - | (x) |
-| 55 | rdcntvl.w rd | GR[rd] = Counter[31:0] | 直通(x) |
-| 56 | rdcntvh.w rd | GR[rd] = Counter[63:32] | 直通(x) |
-| 57 | rdcntid rj | GR[rj] = Counter ID | 直通(x) |
+- 直通 (2 (!+1)):
+    | bl offs26 | r1 = PC + 4, PC = PC + SignExt({offs16, 2'0}) | `6'h15` + offs[15:0] + offs[25:16] |
+    | - | - | - |
+    | lu12i rd, imm20 | rd = {imm20, 12'0} | `7'0a` + imm20 + rd |
+    | b offs26 | PC = PC + SignExt({offs16, 2'0}) (ID跳转, nop存队列) | `6'h14` + offs[15:0] + offs[25:16] |
