@@ -4,7 +4,6 @@
 
 （可以统一一下width, size, num...的命名规则）
 
-
 | Parameter      | Meaning                        | Default |
 | -------------- | ------------------------------ | ------- |
 | PC_WIDTH       | 指令位宽                       | 32      |
@@ -14,88 +13,89 @@
 | ARF_SIZE       | 逻辑寄存器容量                 |         |
 | ARF_ADDR_WIDTH | 逻辑寄存器地址位宽             |         |
 | ROB_SIZE       | 重排序缓冲容量                 |         |
-| ROB_ADDR_WIDTH | 重排序缓冲entr位宽             |         |
+| ROB_ADDR_WIDTH | 重排序缓冲entry位宽            |         |
 | MACHINE_NUM    | 每cc最多**取指**指令数目 |         |
 | ISSUE_NUM      | 每cc最多**发射**指令数目 |         |
 | RETIRE_NUM     | 每cc最多**退休**指令数目 |         |
 
-
 2.模块重要端口、接线定义 （clk, rst等信号暂略）
 
-
-| Stage(.Model) | Port                   | Wire          | I/O | Width     | From Stage     | Meaning                       |
-| ------------- | ---------------------- | ------------- | --- | --------- | -------------- | ----------------------------- |
-| IF            | inst_1                 | inst_1        | o   | REG_WIDTH | -              | 每cc取得的指令的机器码        |
-|               | inst_2                 | inst_2        | o   | REG_WIDTH | -              | 同上                          |
-|               | inst_3                 | inst_3        | o   | REG_WIDTH | -              | 同上                          |
-|               | inst_4                 | inst_4        | o   | REG_WIDTH | -              | 同上                          |
-|               | pc_if                  | pc_if         | o   | PC_WIDTH  | -              | 当前阶段PC, BTB更新时将会有用 |
-|               | jump                   | jump          | i   | 1         | ID             | 解码识别到无条件跳转          |
-|               | pc_jump                | pc_jump       | i   | PC_WIDTH  | ID             | 算得无条件跳转地址            |
-|               | branch                 | branch        | i   | 1         | ID             | 已判断好的是否分支条件        |
-|               | btb_renew              | btb_renew     | i   | 1         | EX             | btb更新使能                   |
-|               | pc_ex                  | pc_ex         | i   | PC_WIDTH  | EX             | btb更新分支指令值             |
-|               | ...                    |               | i   |           | EX             | btb更新具体内容               |
-|               |                        |               |     |           |                |                               |
-| ID            | inst_1(2,3,4)          | inst_1(2,3,4) | i   | REG_WIDTH | IF             | IF阶段获得的机器码指令        |
-|               | pc_if                  | pc_if         | i   | PC_WIDTH  | IF             | 刚刚从取值阶段传来的PC        |
-|               | jump                   | jump          | o   | 1         | -              | 解码确认为jump指令            |
-|               | pc_jump                | pc_jump       | o   | PC_WIDTH  | -              | 无条件跳转的目的pc地址        |
-|               | branch                 | branch        | o   | 1         | -              | 是否分支条件                  |
-|               | global_type_1(2,3,4)   |               | o   |           | -              |                               |
-|               | alu_type_1(2,3,4)      |               | o   |           | -              |                               |
-|               | alu_sign_1(2,3,4)      |               | o   |           | -              |                               |
-|               | ext_sign_1(2,3,4)      |               | o   |           | -              |                               |
-|               | u_or_l_1(2,3,4)        |               | o   |           | -              |                               |
-|               | w_h_b_1(2,3,4)         |               | o   |           | -              | word, halfword或byte          |
-|               | rk_1(2,3,4)            |               | o   |           | -              |                               |
-|               | rj_1(2,3,4)            |               | o   |           | -              |                               |
-|               | rd_1(2,3,4)            |               | o   |           | -              |                               |
-|               | ...                    |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-| RENAME        | rk_1(2,3,4)            |               | i   |           | ID             |                               |
-|               | rj_1(2,3,4)            |               | i   |           | ID             |                               |
-|               | rd_1(2,3,4)            |               | i   |           | ID             |                               |
-|               | pk_1(2,3,4)            |               | o   |           | -              |                               |
-|               | pj_1(2,3,4)            |               | o   |           | -              |                               |
-|               | pd_1(2,3,4)            |               | o   |           | -              |                               |
-|               | flush                  |               | i   |           |                | 刷洗                          |
-|               | exp                    |               | i   |           |                | 异常                          |
-|               | arat_wr                |               | i   |           |                | arat更新使能                  |
-|               | ...                    |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-| ISSUE         | pk_1(2,3,4)            |               | i   |           |                |                               |
-|               | pj_1(2,3,4)            |               | i   |           |                |                               |
-|               | pd_1(2,3,4)            |               | i   |           |                |                               |
-|               | wakeup_prf             |               | i   |           | EX(每个FU一条) | 唤醒总线                      |
-|               | wakeup_valid           |               | i   |           | EX             |                               |
-|               | ptr_old                |               | i   |           | ROB            | ROB头指针                     |
-|               | ptr_new                |               | i   |           | ROBllll;lk     | ROB尾指针                     |
-|               | ...                    |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-| EX            | ...                    |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-| COMMIT        | tag_rob                |               | i   |           | EX             |                               |
-|               | valid_request          |               | i   |           | EX             |                               |
-|               | exp                    |               | i   |           | EX             |                               |
-|               | Freelist_release_addr  |               | o   |           | -              |                               |
-|               | Freelist_release_valid |               | o   |           | -              |                               |
-|               | arat_addr              |               | o   |           | -              |                               |
-|               | arat_value             |               | o   |           | -              |                               |
-|               | arat_update_valid      |               | o   |           | -              |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-|               |                        |               |     |           |                |                               |
-
+| Stage(.Module) | Port                   | Wire        | I/O | Width     | From Stage     | Meaning                                             |
+| -------------- | ---------------------- | ----------- | --- | --------- | -------------- | --------------------------------------------------- |
+| IF             | inst_1                 | inst_1      | o   | REG_WIDTH | -              | 每cc取得的指令的机器码                              |
+|                | inst_2                 | inst_2      | o   | REG_WIDTH | -              | 同上                                                |
+|                | inst_3                 | inst_3      | o   | REG_WIDTH | -              | 同上                                                |
+|                | pc_if                  | pc_if       | o   | PC_WIDTH  | -              | 当前阶段PC, BTB更新时将会有用                       |
+|                | jump                   | jump        | i   | 1         | ID             | 解码识别到无条件跳转                                |
+|                | pc_jump                | pc_jump     | i   | PC_WIDTH  | ID             | 算得无条件跳转地址                                  |
+|                | branch                 | branch      | i   | 1         | ID             | 已判断好的是否分支条件                              |
+|                | btb_renew              | btb_renew   | i   | 1         | ID             | btb更新使能                                         |
+|                | pc_id                  | pc_id       | i   | PC_WIDTH  | ID             | btb更新分支指令值(分支指令的具体值计划在ID阶段算好) |
+|                | ...                    |             | i   |           | ID             | btb更新具体内容                                     |
+|                |                        |             |     |           |                | - 注意FIFO后面要改到ROB里面<br />- IF ID之间加队列  |
+| ID             | inst_1(2,3)            | inst_1(2,3) | i   | REG_WIDTH | IF             | IF阶段获得的机器码指令                              |
+|                | pc_if                  | pc_if       | i   | PC_WIDTH  | IF             | 刚刚从取值阶段传来的PC                              |
+|                | jump(挪到预解码了)     | jump        | o   | 1         | -              | 解码确认为jump指令                                  |
+|                | pc_jump                | pc_jump     | o   | PC_WIDTH  | -              | 无条件跳转的目的pc地址                              |
+|                | branch                 | branch      | o   | 1         | -              | 是否分支条件                                        |
+|                | btb_renew              |             | o   |           |                |                                                     |
+|                | pc_id                  |             | o   |           |                |                                                     |
+|                | global_type_1(2,3)     |             | o   |           | -              |                                                     |
+|                | alu_type_1(2,3)        |             | o   |           | -              |                                                     |
+|                | alu_sign_1(2,3)        |             | o   |           | -              |                                                     |
+|                | ext_sign_1(2,3)        |             | o   |           | -              |                                                     |
+|                | u_or_l_1(2,3)          |             | o   |           | -              |                                                     |
+|                | w_h_b_1(2,3) (?)       |             | o   |           | -              | word, halfword或byte                                |
+|                | rk_1(2,3)              |             | o   |           | -              |                                                     |
+|                | rj_1(2,3)              |             | o   |           | -              |                                                     |
+|                | rd_1(2,3)              |             | o   |           | -              |                                                     |
+|                | regwr_1(2,3)           |             | o   |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+| RENAME         | rk_1(2,3,4)            |             | i   |           | ID             |                                                     |
+|                | rj_1(2,3,4)            |             | i   |           | ID             |                                                     |
+|                | rd_1(2,3,4)            |             | i   |           | ID             |                                                     |
+|                | pk_1(2,3,4)            |             | o   |           | -              |                                                     |
+|                | pj_1(2,3,4)            |             | o   |           | -              |                                                     |
+|                | pd_1(2,3,4)            |             | o   |           | -              |                                                     |
+|                | flush                  |             | i   |           |                | 刷洗                                                |
+|                | exp                    |             | i   |           |                | 异常                                                |
+|                | arat_wr                |             | i   |           |                | arat更新使能                                        |
+|                | ...                    |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+| ISSUE          | pk_1(2,3)              |             | i   |           |                |                                                     |
+|                | pj_1(2,3)              |             | i   |           |                |                                                     |
+|                | pd_1(2,3)              |             | i   |           |                |                                                     |
+|                | wakeup_prf             |             | i   |           | EX(每个FU一条) | 唤醒总线                                            |
+|                | wakeup_valid           |             | i   |           | EX             |                                                     |
+|                | ptr_old                |             | i   |           | ROB            | ROB头指针                                           |
+|                | ptr_new                |             | i   |           | ROBllll;lk     | ROB尾指针                                           |
+|                | ...                    |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+| READ           |                        |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+| EX             | ...                    |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+| WB             |                        |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+| COMMIT         | tag_rob                |             | i   |           | EX             |                                                     |
+|                | valid_request          |             | i   |           | EX             |                                                     |
+|                | exp                    |             | i   |           | EX             |                                                     |
+|                | Freelist_release_addr  |             | o   |           | -              |                                                     |
+|                | Freelist_release_valid |             | o   |           | -              |                                                     |
+|                | arat_addr              |             | o   |           | -              |                                                     |
+|                | arat_value             |             | o   |           | -              |                                                     |
+|                | arat_update_valid      |             | o   |           | -              |                                                     |
+|                |                        |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+|                | freeze                 |             |     |           |                |                                                     |
+|                | stop                   |             |     |           |                |                                                     |
+|                | 各种各样的full         |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
+|                |                        |             |     |           |                |                                                     |
 
 3.指令解码
 
@@ -227,3 +227,6 @@
 注：
 
 - 感觉HIT开源项目的interface结构使用是可以借鉴的，个人感觉对代码可读性和修改流程有很大改善
+
+
+- Dispatch是否可以和Rename放在一起。

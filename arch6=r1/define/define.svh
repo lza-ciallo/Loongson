@@ -1,1 +1,5 @@
-// 最基本设定
+//
+// IF 
+
+`ifndef DEFINE
+`define DEFINE
