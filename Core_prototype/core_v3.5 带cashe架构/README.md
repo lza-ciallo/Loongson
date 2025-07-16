@@ -1,0 +1,2 @@
+- **sRAT**中的`valid_list`由`ARF_width`改为`PRF_width`;
+- **RS_ADD**, **RS_MUL**, **RS_AGU**的唤醒逻辑由`casez优先级编码器`改为`tag_ROB-ptr_old比较器树`, 实现了oldest-first.
