@@ -8,6 +8,6 @@ cashe的mem_stall控制我已经完善了一下，由 Cache 的内部状态机 (
 
 完善了ic_read_req_out 的驱动逻辑，确保它在 cache_stall_in 有效时被禁止，从而真正地暂停了取指。
 
-我的cashe状态机也有缺陷，现在删除了一些冗余状态，解决了cache_control 中 State 6 的死锁。它错误地依赖于早就消失的 dc_read_in 信号，我将其暂时修改为无条件跳转。
+我的cashe状态机也有缺陷，现在解决了，现在删除了一些冗余状态，解决了cache_control 中 State 6 的死锁。它错误地依赖于早就消失的 dc_read_in 信号，我将其暂时修改为无条件跳转。
 
 暂时先这样，后面我也可以进一步验证设计的完备性。
