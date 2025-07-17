@@ -44,7 +44,7 @@ module PRF (
 
     // 时序逻辑写入
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             for (i = 0; i < 32; i = i + 1) begin
                 data[i] <= i;
             end

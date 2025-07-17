@@ -1,2 +1,13 @@
-- **sRAT**中的`valid_list`由`ARF_width`改为`PRF_width`;
-- **RS_ADD**, **RS_MUL**, **RS_AGU**的唤醒逻辑由`casez优先级编码器`改为`tag_ROB-ptr_old比较器树`, 实现了oldest-first.
+架构要重构的东西比较多，因为Bram不能用层次化的引用来赋初值，所以没能完成整体验证；
+
+单元逻辑和连线应该问题不大，至少LSQ和cashe这两个最大头的模块没有问题；后端可能有少许兼容问题，但改起来有点乱，重写的时候应该会自然一点，到时候连线稍加注意。
+
+
+经验：在重构的时候LSQ被设计成了整个处理器唯一向Cashe读写的单元，所以感觉后端是不应该定义向cashe的接口的，我之前可能搞错过
+cashe的mem_stall控制我已经完善了一下，由 Cache 的内部状态机 (FSM) 决定。只要 Cache 不处于 IDLE 状态，就会 stall 流水线。
+
+完善了ic_read_req_out 的驱动逻辑，确保它在 cache_stall_in 有效时被禁止，从而真正地暂停了取指。
+
+我的cashe状态机也有缺陷，现在删除了一些冗余状态，解决了cache_control 中 State 6 的死锁。它错误地依赖于早就消失的 dc_read_in 信号，我将其暂时修改为无条件跳转。
+
+暂时先这样，后面我也可以进一步验证设计的完备性。

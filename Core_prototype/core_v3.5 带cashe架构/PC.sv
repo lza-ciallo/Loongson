@@ -7,7 +7,7 @@ module PC (
 );
 
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             pc          <=  -3;
             valid_pc    <=  0;
         end

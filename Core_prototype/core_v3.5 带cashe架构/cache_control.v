@@ -72,7 +72,7 @@ module cache_control(
 
 
 	always@(posedge clk or negedge rst) begin
-		if (!rst) begin // 假设 rst 是低电平有效
+		if (rst) begin // 假设 rst 是低电平有效
 	        state0 <= 4'b0;
   	      state1 <= 4'b0;
    		 end else begin

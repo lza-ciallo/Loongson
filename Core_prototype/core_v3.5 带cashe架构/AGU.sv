@@ -19,7 +19,7 @@ module AGU (
     assign  ExtImm  =   {{11{Imm[4]}}, Imm};
 
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             valid_Addr_agu          <=  '0;
             tag_ROB_Result_agu      <=  '0;
             Addr_agu                <=  '0;

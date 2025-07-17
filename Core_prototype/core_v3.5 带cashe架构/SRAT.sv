@@ -56,7 +56,7 @@ module SRAT (
 
     // 写入 Pw, 接收广播, ROB 退休释放
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             for (i = 0; i < 8; i = i + 1) begin
                 // list[i].P_list      <=  i;
                 // list[i].valid_list  <=  1;

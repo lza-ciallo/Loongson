@@ -84,7 +84,7 @@ module ROB (
     endgenerate
 
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             valid_list  <=  '0;
             for (i = 0; i < 32; i = i + 1) begin
                 list[i] <=  '0;

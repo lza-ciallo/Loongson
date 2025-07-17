@@ -22,7 +22,7 @@
     reg     [15 : 0]    Result_mul_temp;
 
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             valid_Result_mul        <=  '0;
             Pw_Result_mul           <=  '0;
             tag_ROB_Result_mul      <=  '0;

@@ -73,7 +73,12 @@ module FRONT_END (
     output              mode_awake_out,
     output  [4 : 0]     Px_awake_out,
     output  [15 : 0]    Addr_awake_out,
-    output  [4 : 0]     tag_ROB_ls_awake_out
+    output  [4 : 0]     tag_ROB_ls_awake_out,
+
+    output              valid_Result_ls_to_broadcast,
+    output  [4:0]       Pw_Result_ls_to_broadcast,
+    output              mode_ls_to_broadcast,
+    output Data_Result_ls_out 
 );
 
     // --- 内部信号 ---
@@ -204,6 +209,7 @@ module FRONT_END (
         .Pw_Result_mul(Pw_Result_mul_in), .valid_Result_mul(valid_Result_mul_in),
         .valid_Result_ls_out(valid_Result_ls_in), .Pw_Result_ls_out(Pw_Result_ls_in), .mode_ls_out(mode_ls_in),
         .valid_Addr_agu(valid_Addr_agu_in), .tag_ROB_Result_agu(tag_ROB_Result_agu_in), .Addr_agu(Addr_agu_in),
-        .dc_read_req(dc_read_req_out), .dc_write_req(dc_write_req_out), .dc_addr(dc_addr_out), .dc_byte_w_en(dc_byte_w_en_out), .dc_wdata(dc_wdata_out), .dc_rdata(dc_rdata_in)
+        .dc_read_req(dc_read_req_out), .dc_write_req(dc_write_req_out), .dc_addr(dc_addr_out), .dc_byte_w_en(dc_byte_w_en_out), .dc_wdata(dc_wdata_out), .dc_rdata(dc_rdata_in),
+        .Data_Result_ls_out (Data_Result_ls_out)
     );
 endmodule

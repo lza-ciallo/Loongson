@@ -50,7 +50,9 @@ module LSQ (
     output reg [29:0]   dc_addr,
     output reg [3:0]    dc_byte_w_en,
     output reg [31:0]   dc_wdata,
-    input  wire [31:0]  dc_rdata
+    input  wire [31:0]  dc_rdata,
+    
+    output [15:0] Data_Result_ls_out
 );
 
     // LSQ 条目结构体
@@ -97,10 +99,10 @@ module LSQ (
     endgenerate
 
     assign full_LSQ = (valid_op_list[ptr_old] == 1 && (ptr_young_wire[0] == ptr_old || ptr_young_wire[1] == ptr_old || ptr_young_wire[2] == ptr_old));
-
+    assign Data_Result_ls_out = dc_rdata[15:0];
     // --- 主要时序逻辑 ---
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             valid_op_list   <= '0;
             mode_list       <= '0;
             valid_Px_list   <= '0;

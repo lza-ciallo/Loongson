@@ -10,7 +10,7 @@ module REGISTER #(
 );
 
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             data_out <= '0;
         end
         else begin

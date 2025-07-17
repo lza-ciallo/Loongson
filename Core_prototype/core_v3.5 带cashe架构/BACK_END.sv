@@ -35,26 +35,20 @@ module BACK_END (
     input   [4 : 0]     Px_in,
     input   [15 : 0]    Addr_in,
     input   [4 : 0]     tag_ROB_ls_in,
-
-    // --- Cache 接口 ---
-    output              dc_read_req_out,
-    output              dc_write_req_out,
-    output  [29:0]      dc_addr_out,
-    output  [3:0]       dc_byte_w_en_out,
-    output  [31:0]      dc_wdata_out,
-    input   [31:0]      dc_rdata_in,
+    input               valid_Result_ls_in,
+    input   [4:0]       Pw_Result_ls_in,
+    input               mode_ls_in,
+    input [15:0] Data_Result_ls_in,
 
     // --- 输出到 FRONT_END ---
     output              full_ROB_out,
-    output              full_FIFO_out,
+    //output              full_FIFO_out,
     output  [4 : 0]     tag_ROB_out     [2 : 0],
     output  [4 : 0]     Pw_Result_add_out,
     output              valid_Result_add_out,
     output  [4 : 0]     Pw_Result_mul_out,
     output              valid_Result_mul_out,
-    output  [4 : 0]     Pw_Result_ls_out,
-    output              valid_Result_ls_out,
-    output              mode_ls_out,
+    
     output              valid_Addr_agu_out,
     output  [4 : 0]     tag_ROB_Result_agu_out,
     output  [15 : 0]    Addr_agu_out,
@@ -91,35 +85,9 @@ module BACK_END (
     assign {busA_add_r, busB_add_r, busA_mul_r, busB_mul_r, busA_agu_r, busX_r, Addr_r,
             valid_add_r, valid_mul_r, valid_agu_r, valid_ls_r, mode_r,
             Pw_add_r, Pw_mul_r, Px_r, tag_ROB_add_r, tag_ROB_mul_r, tag_ROB_ls_r, Imm_r, tag_ROB_agu_r} = bunch_READ_r;
-    
-    // --- 新增: D-Cache 请求生成 ---
-    assign dc_read_req_out = valid_ls_r && mode_r;
-    assign dc_write_req_out = valid_ls_r && !mode_r;
-    assign dc_addr_out = {14'b0, Addr_r};
-    assign dc_wdata_out = {16'b0, busX_r}; // busX来自PRF, 是Store的数据源
-    assign dc_byte_w_en_out = (valid_ls_r && !mode_r) ? 4'b1111 : 4'b0;
 
-    // --- 新增: Load结果广播生成 ---
-    reg load_req_sent;
-    reg [4:0] load_pending_px;
-    reg [4:0] load_pending_tag_rob;
-
-    always @(posedge clk or negedge rst) begin
-        if(!rst) load_req_sent <= 1'b0;
-        else if(dc_read_req_out) begin
-            load_req_sent <= 1'b1;
-            load_pending_px <= Px_r;
-            load_pending_tag_rob <= tag_ROB_ls_r;
-        end else if(load_req_sent) begin
-            load_req_sent <= 1'b0;
-        end
-    end
-    
-    assign valid_Result_ls_out = load_req_sent && !dc_read_req_out;
-    assign mode_ls_out = 1'b1;
-    assign Pw_Result_ls_out = load_pending_px;
-    assign tag_ROB_Result_ls = load_pending_tag_rob;
-    assign Result_ls = dc_rdata_in;
+   
+ 
 
     // --- 模块例化 ---
     PRF u_PRF (
@@ -130,7 +98,7 @@ module BACK_END (
         .Px(Px_in), .busX(busX),
         .Pw_Result_add(Pw_Result_add_out), .Result_add(Result_add), .valid_Result_add(valid_Result_add_out),
         .Pw_Result_mul(Pw_Result_mul_out), .Result_mul(Result_mul), .valid_Result_mul(valid_Result_mul_out),
-        .Pw_Result_ls(Pw_Result_ls_out), .Result_ls(Result_ls), .valid_Result_ls(valid_Result_ls_out), .mode_ls(mode_ls_out)
+        .Pw_Result_ls(Pw_Result_ls_out), .Result_ls(Data_Result_ls_in), .valid_Result_ls(valid_Result_ls_out), .mode_ls(mode_ls_out)
     );
 
     REGISTER #(.BW(152)) u_REG_READ_EX (

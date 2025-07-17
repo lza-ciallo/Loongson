@@ -24,7 +24,7 @@ module ARAT (
     endgenerate
 
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             for (i = 0; i < 8; i = i + 1) begin
                 ARAT_P_list[i]  <=  i;
             end

@@ -17,7 +17,7 @@ module ADD_UNIT (
 );
 
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             valid_Result_add        <=  '0;
             Pw_Result_add           <=  '0;
             tag_ROB_Result_add      <=  '0;

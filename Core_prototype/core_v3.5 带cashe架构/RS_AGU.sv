@@ -64,7 +64,7 @@ module RS_AGU (
 
     // 写入, 接收广播, 发射
     always @(posedge clk or negedge rst) begin
-        if (!rst) begin
+        if (rst) begin
             valid_op_list       <=  '0;
             valid_Pa_list       <=  '0;
             for (i = 0; i < 8; i = i + 1) begin

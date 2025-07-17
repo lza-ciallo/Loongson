@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="176b3a53-c3b0-49e6-aa8d-57690e9e3d8f" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/ADD_UNIT.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/ADD_UNIT.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/AGU.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/AGU.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/ARAT.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/ARAT.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/BACK_END.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/BACK_END.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/FRONT_END.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/FRONT_END.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/LSQ.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/LSQ.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/MUL_UNIT.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/MUL_UNIT.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/My_CPU.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/My_CPU.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/My_CPU_tb.v" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/PC.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/PC.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/PRF.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/PRF.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/REGISTER.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/REGISTER.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/ROB.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/ROB.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/RS.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/RS.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/RS_AGU.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/RS_AGU.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/SRAT.sv" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/SRAT.sv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/cache_control.v" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/cache_control.v" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/test_program.coe" beforeDir="false" afterPath="$PROJECT_DIR$/Core_prototype/core_v3.5 带cashe架构/test_program.coe" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2zm3xE48H1uZKeSEHeNlYiXyYrP" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-2e7d6887c066-JavaScript-WS-241.15989.47" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="176b3a53-c3b0-49e6-aa8d-57690e9e3d8f" name="更改" comment="" />
+      <created>1752322665837</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1752322665837</updated>
+      <workItem from="1752322668544" duration="735000" />
+      <workItem from="1752323421297" duration="9000" />
+      <workItem from="1752323436591" duration="30000" />
+      <workItem from="1752323474507" duration="137000" />
+      <workItem from="1752323622655" duration="11000" />
+      <workItem from="1752576961229" duration="3120000" />
+      <workItem from="1752632210403" duration="5584000" />
+      <workItem from="1752745150188" duration="290000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
