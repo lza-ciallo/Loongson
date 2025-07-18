@@ -70,7 +70,13 @@ module cache_control(
 	assign response_data_cache_to_core	=	response_data_cache_to_core0|	response_data_cache_to_core1;
 	*/
 
-
+	// --- 状态机定义 ---
+	// State 0: IDLE (空闲)
+	// State 1: COMPARE (比较Tag)
+	// State 2: WRITE_HIT (写命中，实际逻辑与COMPARE合并)
+	// State 3: RESPONSE (响应CPU，命中或填充/写回后)
+	// State 4: WRITE_BACK (将脏块写回RAM)
+	// State 5: REFILL (从RAM填充新块)
 	always@(posedge clk or negedge rst) begin
 		if (rst) begin // 假设 rst 是低电平有效
 	        state0 <= 4'b0;
@@ -135,7 +141,7 @@ module cache_control(
 				state1	<=	0;
 			end
 			3: begin
-				if(d_cache_miss == 1'b1 && response_ram_to_cache == 1'b1)
+				if(d_cache_miss == 1'b1  /*这个条件应该有点问题response_ram_to_cache == 1'b1*/)
 					state1	<=	4;
 				else if(d_cache_hit == 1)
 					state1	<=	5;
@@ -200,42 +206,41 @@ always@(*) begin
     response_inst_cache_to_core1=	1'b0;
     response_data_cache_to_core1=	1'b0;
 
-    // case 语句内部，所有赋值都使用阻塞赋值 "="
     case(state0)
         0: begin
             // 在这里不需要写任何东西了，因为默认值已经处理了
         end
         1: begin
-            d_cache_enable0				=	1;
-            d_cache_compare0			=	1;
-            d_cache_read0				=	1;
-            d_cache_addr_ctr0			=	1;
+            d_cache_enable0				=	1;//使能
+            d_cache_compare0			=	1;//tag比较
+            d_cache_read0				=	1;//操作类型
+            //d_cache_addr_ctr0			=	1;
         end
         2: begin
             d_cache_enable0				=	1;
             d_cache_compare0			=	1;
-            d_cache_addr_ctr0			=	1;
+            //d_cache_addr_ctr0			=	1;
         end
         3: begin
             d_cache_compare0 = (d_cache_read || d_cache_write); // 只有在初始请求时才需要比较
-    		response_data_cache_to_core0 = 1;
-    		d_cache_enable0 = 1; 
+    		response_data_cache_to_core0 = 1;//响应，数据有效
+    		//d_cache_enable0 = 1; 
         end
         4: begin
-            addr_cache_to_ram_ctr0		=	1;
-            enable_cache_to_ram0		=	1;
-            write_cache_to_ram0			=	1;
+            //addr_cache_to_ram_ctr0		=	1;
+            enable_cache_to_ram0		=	1;//使能
+            write_cache_to_ram0			=	1;//写ram
         end
         5: begin
-            d_cache_enable0				=	1;
+            d_cache_enable0				=	1;//使能D_cashe
             d_cache_addr_ctr0			=	1;
             addr_cache_to_ram_ctr0		=	1;
             enable_cache_to_ram0		=	1;
         end
-        6: begin
-            d_cache_enable0				=	1;
-            d_cache_addr_ctr0			=	1;
-        end
+        // 6: begin
+        //     d_cache_enable0				=	1;
+        //     d_cache_addr_ctr0			=	1;
+        // end
     endcase
     
     // 第二个状态机的 case 语句

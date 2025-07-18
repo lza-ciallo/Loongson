@@ -96,6 +96,8 @@ module icache_two_way_group(
     end
     
     assign hit       = hit0 | hit1;//任一命中，总命中
+     // 如果命中，脏位/有效位/写回地址/写回数据块 来自命中的那一路
+    // 如果都没命中(替换时)，则根据sel位选择一路
     assign dirty     = hit0 ? dirty0 : (hit1 ? dirty1 : 0);
     assign valid     = hit0 ? valid0 : (hit1 ? valid1 : 0);
     assign data_o    = hit0 ? data_o0 : (hit1 ? data_o1 : 64'h0);
@@ -133,6 +135,7 @@ module icache_two_way_group(
     always@(enable or read) begin
         if(enable == 1'b1) begin
             if(read == 1'b0) begin
+                // 当发生写未命中(compare=0, read=0)时，翻转sel位，下次替换另一路
                 sel <= ~sel;//简单伪随机，可以扩展
             end
         end
