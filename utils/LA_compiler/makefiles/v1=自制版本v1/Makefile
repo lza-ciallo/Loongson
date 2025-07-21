@@ -1,6 +1,6 @@
 # Simple Makefile for converting .s assembly files to .txt binary machine code
 # Author: Created for LoongArch assembly to binary conversion
-# Usage: make -f Makefile_simple [target]
+# Usage: make -f Makefile [target]
 
 # Configuration
 ASM_FILES = $(wildcard *.s)
@@ -28,7 +28,11 @@ all: $(TXT_FILES)
 # Rule to convert .s -> .o -> .elf -> .bin -> .txt
 %.txt: %.bin
 	@echo "Converting $< to $@..."
-	xxd -p -c 4 $< | tr -d '\n' | sed 's/\(........\)/\1\n/g' > $@
+    # (HEX version) 
+    # xxd -p -c 4 $< | tr -d '\n' | sed 's/\(........\)/\1\n/g' > $@
+    # (Binary version)
+	xxd -b -c 4 $< | awk '{print $$2$$3$$4$$5}' | sed 's/ //g' > $@
+
 
 %.bin: %.elf
 	@echo "Extracting binary from $<..."
@@ -56,18 +60,18 @@ list:
 	@echo "Will generate .txt files:"
 	@echo "$(TXT_FILES)"
 
-# Convert specific file (usage: make -f Makefile_simple convert FILE=example.s)
+# Convert specific file (usage: make -f Makefile convert FILE=example.s)
 convert:
 ifdef FILE
 	@if [ -f "$(FILE)" ]; then \
 		echo "Converting $(FILE) to $(FILE:.s=.txt)..."; \
-		make -f Makefile_simple $(FILE:.s=.txt); \
+		make -f Makefile $(FILE:.s=.txt); \
 	else \
 		echo "Error: File $(FILE) not found!"; \
 		exit 1; \
 	fi
 else
-	@echo "Usage: make -f Makefile_simple convert FILE=filename.s"
+	@echo "Usage: make -f Makefile convert FILE=filename.s"
 endif
 
 # Help information
@@ -76,15 +80,15 @@ help:
 	@echo "=== LoongArch Assembly to Binary Machine Code Converter ==="
 	@echo "================================================================"
 	@echo "Available targets:"
-	@echo "  make -f Makefile_simple          : Convert all .s files to .txt"
-	@echo "  make -f Makefile_simple all      : Same as above"
-	@echo "  make -f Makefile_simple list     : Show available .s files"
-	@echo "  make -f Makefile_simple convert FILE=xxx.s : Convert specific file"
-	@echo "  make -f Makefile_simple clean    : Remove all generated files"
-	@echo "  make -f Makefile_simple help     : Show this help"
+	@echo "  make -f Makefile          : Convert all .s files to .txt"
+	@echo "  make -f Makefile all      : Same as above"
+	@echo "  make -f Makefile list     : Show available .s files"
+	@echo "  make -f Makefile convert FILE=xxx.s : Convert specific file"
+	@echo "  make -f Makefile clean    : Remove all generated files"
+	@echo "  make -f Makefile help     : Show this help"
 	@echo ""
 	@echo "Process: .s -> .o -> .elf -> .bin -> .txt"
-	@echo "Output: .txt files contain hex machine code (4 bytes per line)"
+	@echo "Output: .txt files contain bin machine code (32 bytes per line)"
 	@echo "================================================================"
 
 # Show detailed process for debugging

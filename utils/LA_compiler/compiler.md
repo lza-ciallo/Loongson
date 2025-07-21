@@ -62,7 +62,6 @@ shell在PATH环境变量中(根据./~bash的配置)查找 "make" 可执行文件
 按照规则执行
 ```
 
-
 ---
 
 ### 3.官方所给Makefile文件运行规则
@@ -104,9 +103,10 @@ ELF文件(.elf)
 FPGA内存文件(.coe, .mif)
 ```
 
-
 ---
 
 ### 4.自定义Makefile
 
 > 根据已写*.s汇编文件，按照LoongArch32r的规则，生成.txt二进制机器码
+>
+> makefiles中, v2为最新最全版本, 请将linux或wsl系统运行在compile_env路径中
