@@ -86,7 +86,8 @@ endif
 
 %.elf: %.o
 	@echo "Linking $< to $@..."
-	$(LD) $< -o $@
+# Link the object file to create ELF, so that <_start> is located at 0x1c00_0000
+	$(LD) -T linker.ld $< -o $@ 
 
 %.o: %.s
 	@echo "Assembling $< to $@..."
