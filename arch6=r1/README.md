@@ -1,3 +1,12 @@
+| 版本 | 进度 |
+| - | - |
+| R1 | 支持大部分基础指令集的行为级仿真 |
+| R2 | 接入 IP, 实现了可接受的时序和面积 |
+
+---
+
+# core_R1 #
+
 ## Elaboration ##
 
 - <u>*define*</u>: **defs.svh** 等三个头文件必须删除`ifndef-define`块, 否则默认不存在; **MASK** 模块同理, 以`Conf`取代宏定义, 以配置输出掩码.
@@ -41,6 +50,24 @@
 - 仅有`clk+rst`输入, 无输出的模块会被优化, 故 **myCPU** 模块需要设置若干 debug 专用输出端口.
 
 - Implementation 结果: 面积几乎占满, 50MHz 时序未达标, 关键路径为 **MDU**.
-- 未来修改: **IFIFO**`64->32`, **ROB**`128->64`, **MDU**调用 `mul`, `div`, `mod`的 IP 核, 周期数设计`2:16:16`, 需要开一个`entry_num=32`的 **BUFFER**, 同时修改级间寄存器.
+- 未来修改: **IFIFO**`64->32`, **ROB**`128->64`, **MDU**调用 `mul`, `div`, `mod`的 IP 核, 周期数设计`1:16:16`, 需要开一个`entry_num=32`的 **BUFFER**, 同时修改级间寄存器.
 
 - 兼修复了**EX-CDB**级间寄存器的位宽错误.
+
+---
+
+# core_R2 #
+
+- <u>*<inst_fetch, commit_unit>*</u> **IFIFO**: `64->32`, **ROB**: `128->64`, 为此修改 tag_rob & ptr_old: `[6:0]->[5:0]`.
+
+- <u>*<back_end>*</u> 删去统一的 **EX-CDB** 级间寄存器, 改为各 FU 内嵌的输出寄存器.
+
+- <u>*<inst_fetch, back_end>*</u> 独立出 **IMEM**, **DMEM** 的端口.
+
+- <u>*<back_end>*</u> 将 **MDU** 修改为 `mul=1,div=mod=16`.
+
+- <u>*<back_end>*</u> 修正了 **mul_wrapper**, **div_wrapper** 中 Conf 的时序混乱问题.
+
+- <u>*<issue_queue, back_end>*</u> 修复了 **DIRQ** 的 awake 寄存器, **MDU** 的 CDB 输出寄存器的锁存 bug.
+
+*未接 cache 的 myCPU 当前可以实现 50MHz 的时序性能, 50% 的面积性能.*
