@@ -76,10 +76,37 @@
 
 # core_R3 #
 
-- JIRL 适配设计:
+- 修正 **inst_fetch.BPU.PHT** 的"第一次写入"问题:
+    ```
+    // learn from predecoder
+    for (integer i = 0; i < 4; i = i + 1) begin
+        if (isBranch[i]) begin
+            btb[i].occupied <=  1;
+            btb[i].tag      <=  pc_write[i][31 : 10];
+            btb[i].target   <=  target_write[i];
+        end
+    end
+    ```
+    $\Rightarrow$
+    ```
+    // learn from predecoder
+    for (integer i = 0; i < 4; i = i + 1) begin
+        if (isBranch[i]) begin
+            btb[pc_write[i][9 : 2]].occupied    <=  1;
+            btb[pc_write[i][9 : 2]].tag         <=  pc_write[i][31 : 10];
+            btb[pc_write[i][9 : 2]].target      <=  target_write[i];
+        end
+    end
+    ```
 
-  - ***inst_fetch*** 阶段 JIRL 视为特殊的 Branch, **RSB** 代替原 Branch 的静态解码, 在**predecoder** 中提供查询 `target_branch` 的功能.
-
-  - ***issue_queue*** 中 **BRUQ** 输入 `rd`,`rj`,`imm=SignExt(offs<<2)`,`target_branch_predict`, **DIRQ** 新增一个 `pc` 输入端口, 与原先的 `imm` 端口进行选择.
-
-  - ***back_end*** 阶段 **BRU** 计算 JIRL 是否预测成功, **ROB** 中默认 `Branch=1`, 写入计算结果 `target_branch_real`,`Predict=1/0`, 匹配成功或失败都使 **PHT** 继续强化跳转.
+- 修正 **inst_fetch.predecoder** 的 Jump 生成逻辑(即 **inst_fetch.IFREG** 置无效):
+    ```
+    // Jump
+    assign  Jump            =   hint & (isJump_r[3] | isJump_r[2] | isJump_r[1] | isJump_r[0]);
+    ```
+    $\Rightarrow$
+    ```
+    // Jump
+    assign  Jump            =   (valid_inst[3] & isJump_r[3]) | (valid_inst[2] & isJump_r[2]) |
+                                (valid_inst[1] & isJump_r[1]) | (valid_inst[0] & isJump_r[0]);
+    ```
