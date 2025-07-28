@@ -127,13 +127,13 @@
 
 ### *bl_jirl(fibonacci_pro)* 测试程序 debug (R3 & R4): ###
 
-- 修复了 **LSU.dfifo** 申请写入 **DMEM** 的队列冲刷错误, 只能清空 `need_store=0` 的条目. 加入 `ptr_wait` 机制, 已退休的 Store 指令会脱离 flush 的约束. (大改)
+- 修复了 **LSU.DFIFO** 申请写入 **DMEM** 的队列冲刷错误, 只能清空 `need_store=0` 的条目. 加入 `ptr_wait` 机制, 已退休的 Store 指令会脱离 flush 的约束. (大改)
 
-- **ROB** 必须视 `JIRL` 为 `Predict=0/1`, `Branch=1`, 否则 **PC** 会根据 `Branch` 选择写入 `pc_rob+4` 还是 `target_rob`.
+- **ROB** 必须视 JIRL 为 `Predict=0/1`, `Branch=1`, 否则 **PC** 会根据 `Branch` 选择写入 `pc_rob+4` 还是 `target_rob`.
 
 - 修复了 **DIRQ** 密堆积写入时的 `isJIRL` 标签问题.
 
-- 修复了 **MASK** 对 Branch, Store 指令同时退休时的错误处理, 采用保守方法, 不退 Branch 以后的任何指令以避免预测失败.
+- 修复了 **ROB.MASK** 对 Branch, Store 指令同时退休时的错误处理, 采用保守方法, 不退休 Branch 以后的任何指令, 以避免预测失败.
 
 - 取消引入 **RSB**, 直接用 **BTB** 存放 JIRL 跳转地址, 但写入只能在初见预测失败时 **ROB** 引回来. **predecoder** 产生的 JIRL 目标地址无效, 被 MUX 筛掉.
 
