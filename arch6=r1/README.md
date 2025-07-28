@@ -112,8 +112,10 @@
                                 (valid_inst[1] & isJump_r[1]) | (valid_inst[0] & isJump_r[0]);
     ```
 
-- 将 JIRL 分拆为"判断预测是否正确"与"GR[rd]=PC+4"两个任务, 后者由 **dirQ** 发射并作 isJIRL_dir 记号, 不可置 **ROB** 为 ready.
+- 将 JIRL 分拆为"判断预测是否正确"与"GR[rd]=PC+4"两个任务, 后者由 **issue_queue.dirQ** 发射并作 `isJIRL_dir=1` 记号, 不可置 **ROB** `ready=1`.
 
-- 取指部分 **inst_fetch.predecoder** 须先标注 JIRL 为 isBranch, 用来预写入 **ROB**.
+- 取指部分 **inst_fetch.predecoder** 须先标注 JIRL 为 `isBranch=1`, 用来预写入 **ROB**.
 
 - 预测失败恢复 debug 时, 修复了 **commit_unit.aRAT.free_list_arat** 的"写0"问题.
+
+- 兼容 JIRL 与 Branch, 规定 `Predict=0`, `Branch=0/1`代表预测成功/失败, 仅额外写入 `target_real`.
