@@ -231,16 +231,14 @@ module LSUQ (
     reg     [15 : 0]    token_list;
     reg     [15 : 0]    token_temp;
 
-    integer temp_j;
-    integer temp_k;
+    reg     [ 3 : 0]    temp_j  [15 : 0];
+    reg     [ 3 : 0]    temp_k  [15 : 0];
 
     always @(*) begin
         shift_temp = ready_list & RegWr_list;
         for (integer i = 0; i < 16; i = i + 1) begin
-            temp_j = (i + ptr_old >= 16)? i + ptr_old - 16 : i + ptr_old;
-            shift_list[i] = shift_temp[temp_j];
-            temp_k = (i - ptr_old  + 16 >= 16)? i - ptr_old : i - ptr_old + 16;
-            token_list[i] = token_temp[temp_k];
+            temp_j[i] = (i + ptr_old) & 32'd15;
+            shift_list[i] = shift_temp[temp_j[i]];
         end
 
         casez (shift_list)
@@ -267,6 +265,11 @@ module LSUQ (
             16'b1111_1111_1111_1111:    token_temp  =   16'b1111_1111_1111_1111;
             default:                    token_temp  =   16'b0000_0000_0000_0000;
         endcase
+
+        for (integer i = 0; i < 16; i = i + 1) begin
+            temp_k[i] = (i + ~ptr_old + 1) & 32'd15;
+            token_list[i] = token_temp[temp_k[i]];
+        end
 
         casez (ready_list & ready_Px_list & ready_Addr_list & token_list)
             16'b????_????_????_???1:    {ptr_awake, awake_exist}    =   {4'd0, 1'b1};

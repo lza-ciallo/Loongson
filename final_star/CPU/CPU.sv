@@ -27,7 +27,7 @@ module CPU (
 );
 
     // func test config
-    wire    Conf_mask           =   1;      // 1: 配置 ROB.MASK 单提交; 0: 默认五提交
+    wire    Conf_mask           =   0;      // 1: 配置 ROB.MASK 单提交; 0: 默认五提交
     assign  debug_wb_pc         =   u_COMMIT_UNIT.u_ROB.rob_list[u_COMMIT_UNIT.ptr_old_out].pc;
     assign  debug_wb_rf_wen     =   {4{u_COMMIT_UNIT.RegWr_rob[0]}};
     assign  debug_wb_rf_wnum    =   u_COMMIT_UNIT.u_ROB.Rd_rob[0];
